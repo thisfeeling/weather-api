@@ -1,59 +1,122 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# Weather API - Laravel
 
-## About Laravel
+Este proyecto es una API sencilla para almacenar lecturas de clima (temperature, humidity, etc.) usando la API de OpenWeather.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📋 Requisitos
+- PHP 8.1+ (o la versión compatible con tu proyecto)
+- Composer
+- MySQL (o cualquier DB compatible configurada en `.env`)
+- Node.js + npm (opcional para assets)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🔧 Instalación y configuración
+1. Clona el repo y entra en la carpeta:
+```bash
+git clone <repo-url>
+cd weather-api
+```
+2. Instala dependencias PHP:
+```bash
+composer install
+```
+3. Copia el archivo de configuración de entorno y actualiza variables:
+```bash
+cp .env.example .env
+```
+Edita `.env` y configura al menos:
+- `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (tu conexión a MySQL)
+- `APP_URL` (ej.: http://127.0.0.1:8000)
+- `OPENWEATHER_API_KEY` (opcional: se usará una clave por defecto como fallback, pero es mejor configurarla aquí)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+4. Genera la APP KEY:
+```bash
+php artisan key:generate
+```
 
-## Learning Laravel
+5. Ejecuta migraciones para crear tablas (incluida `weathers`):
+```bash
+php artisan migrate
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+6. (Opcional) Instala dependencias JS y compila si vas a usar assets:
+```bash
+npm install
+npm run build
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+7. Inicia el servidor local:
+```bash
+php artisan serve
+```
+Por defecto escuchará en: `http://127.0.0.1:8000`.
 
-## Laravel Sponsors
+## 🛣️ Rutas / Endpoints
+- `GET /status` — comprueba que la API está arriba (devuelve un JSON simple)
+- `GET /weather` — devuelve todos los registros almacenaros en la DB, ordenados por `created_at` descendente
+- `GET /weather/fetch` — obtiene datos actuales de OpenWeather y los almacena en la tabla `weathers`
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Parámetros para `/weather/fetch`:
+- Puedes usar `?city_name=Manizales&country_code=co` para enviar separado el nombre de ciudad y el código del país.
+- O bien usar `?q=Manizales,co` (estilo OpenWeather) — si no pasas parámetros se usará `Manizales,co` por defecto.
 
-### Premium Partners
+## ✨ Ejemplos de uso
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### curl
+Guardar clima para Manizales, Colombia:
+```bash
+curl "http://127.0.0.1:8000/weather/fetch?city_name=Manizales&country_code=co"
+```
 
-## Contributing
+Usar `q`:
+```bash
+curl "http://127.0.0.1:8000/weather/fetch?q=Manizales,co"
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Obtener todas las lecturas almacenadas:
+```bash
+curl "http://127.0.0.1:8000/weather"
+```
 
-## Code of Conduct
+### Postman / Apidog
+1. Crea una nueva colección (o request) en Postman/Apidog.
+2. Para `fetch`:
+	 - Método: GET
+	 - URL: `http://127.0.0.1:8000/weather/fetch`
+	 - Query params:
+		 - `city_name`: `Manizales`
+		 - `country_code`: `co`
+	 - Envia la request; deberías recibir el JSON del registro creado con estado 201.
+3. Para listar registros:
+	 - Método: GET
+	 - URL: `http://127.0.0.1:8000/weather`
+	 - Devuelve un array JSON con los últimos registros.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Ejemplo de respuesta (creación) — `GET /weather/fetch`
+```json
+{
+	"id": 1,
+	"city": "Manizales",
+	"country": "CO",
+	"temperature": 14.2,
+	"humidity": 75,
+	"pressure": 1012,
+	"condition": "clear sky",
+	"visibility": 10000,
+	"collected_at": "2025-11-15T18:00:00Z",
+	"created_at": "2025-11-15T18:01:00Z",
+	"updated_at": "2025-11-15T18:01:00Z"
+}
+```
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## ✅ Notas y troubleshooting
+- Si ves un error de tabla `Base table or view not found: 1146 Table 'weather.weather' doesn't exist` al consultar `/weather` — puede ser por una inconsistencia de nombre de tabla (Eloquent intentó usar `weather` en singular). Asegúrate de:
+	- Ejecuar `php artisan migrate` para crear la tabla `weathers`.
+	- En el `Weather` model está declarado `protected $table = 'weathers';` (si prefieres `weather` singular, adapta la migración o el modelo).
+- Asegúrate de configurar la conexión DB en `.env`.
+- Si no aparece `OPENWEATHER_API_KEY`, la aplicación usa una clave por defecto como fallback, pero es recomendable configurar tu propia clave:
+	- Consigue una API Key desde https://openweathermap.org
+	- Añádela a `.env`:
+	```bash
+	OPENWEATHER_API_KEY=tu_clave_aqui
+	```
+---
